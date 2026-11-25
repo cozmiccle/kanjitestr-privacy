@@ -23,6 +23,10 @@
   button { font: inherit; font-weight: 600; padding: .7rem 1rem; border: 0; border-radius: 10px;
            background: #0a66c2; color: white; cursor: pointer; justify-self: start; }
   .fallback { margin-top: 1.25rem; color: GrayText; font-size: .95rem; }
+  .soon { color: GrayText; }
+  .soon small { font-style: italic; }
+  .error { color: #c62828; font-weight: 400; font-size: .95rem; }
+  @media (prefers-color-scheme: dark) { .error { color: #ff6b6b; } }
 </style>
 </head>
 <body>
@@ -39,19 +43,24 @@
     <small>Any address you can open on your device. It doesn’t have to be your Apple Account.</small>
     <input name="email" type="email" autocomplete="email" required>
   </label>
+  <label>Signup code
+    <small>It’s on the poster, or ask whoever told you about the beta. Scanning the poster’s QR code fills it in.</small>
+    <input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+    <span class="error" id="code-error" hidden>That code isn’t right. Check it and try again.</span>
+  </label>
   <fieldset>
     <legend>Devices you’ll test on</legend>
-    <label><input type="checkbox" name="device" value="iPhone"> iPhone</label>
-    <label><input type="checkbox" name="device" value="iPad"> iPad</label>
-    <label><input type="checkbox" name="device" value="Mac"> Mac</label>
+    <label><input type="checkbox" name="device" value="iPhone" checked> iPhone</label>
+    <label class="soon"><input type="checkbox" disabled> iPad <small>coming soon</small></label>
+    <label class="soon"><input type="checkbox" disabled> Mac <small>coming soon</small></label>
   </fieldset>
-  <label>Anything else? <small>Optional: your Japanese level, what you’d like to study.</small>
+  <label>Anything else? <small>Optional: how you heard about 漢字Testr, your Japanese level, what you’d like to study.</small>
     <textarea name="notes" rows="3"></textarea>
   </label>
   <button type="submit">Write my request</button>
 </form>
 
-<p class="fallback" id="fallback">If no mail app opens, send the same details to <span id="addr">the address shown here once the page loads</span>.</p>
+<p class="fallback" id="fallback" hidden>If no mail app opened, send the same details, including your signup code, to <span id="addr"></span>.</p>
 
 <h2>What happens next</h2>
 <ol>
@@ -64,22 +73,51 @@
 <script>
   // Assembled here rather than written out, to keep the address away from simple scrapers.
   const address = ["eqmccully", "kanjitestrsignup"].join("+") + "@" + "icloud.com";
-  document.getElementById("addr").innerHTML = '<a href="mailto:' + address + '">' + address + "</a>";
 
-  document.getElementById("signup").addEventListener("submit", (e) => {
+  // SHA-256 of each accepted signup code (normalized: trimmed, uppercased).
+  // The codes themselves are never in this page; the request email carries the
+  // code typed, so it can be checked again on arrival.
+  const codeHashes = [
+    "ea7ca0bdaafe27f258daaa2cafed764f0a8bca977f53c82dd38409b11ce945a0",
+  ];
+
+  const form = document.getElementById("signup");
+  const codeError = document.getElementById("code-error");
+  const normalize = (code) => code.trim().toUpperCase();
+
+  async function sha256(text) {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // The poster's QR code links here with ?code=…, which fills the field.
+  const fromLink = new URLSearchParams(location.search).get("code");
+  if (fromLink) form.code.value = normalize(fromLink);
+  form.code.addEventListener("input", () => { codeError.hidden = true; });
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const f = e.target;
-    const devices = [...f.querySelectorAll('input[name="device"]:checked')].map((d) => d.value);
+    const code = normalize(form.code.value);
+    if (!codeHashes.includes(await sha256(code))) {
+      codeError.hidden = false;
+      form.code.focus();
+      return;
+    }
+    const devices = [...form.querySelectorAll('input[name="device"]:checked')].map((d) => d.value);
     const body = [
       "Please add me to the 漢字Testr beta.",
       "",
-      "Name: " + f.name.value.trim(),
-      "Invite email: " + f.email.value.trim(),
+      "Name: " + form.name.value.trim(),
+      "Invite email: " + form.email.value.trim(),
       "Devices: " + (devices.join(", ") || "not specified"),
-      f.notes.value.trim() ? "\nNotes: " + f.notes.value.trim() : "",
+      "Signup code: " + code,
+      form.notes.value.trim() ? "\nNotes: " + form.notes.value.trim() : "",
     ].join("\n");
+
+    document.getElementById("addr").innerHTML = '<a href="mailto:' + address + '">' + address + "</a>";
+    document.getElementById("fallback").hidden = false;
     location.href = "mailto:" + address +
-      "?subject=" + encodeURIComponent("漢字Testr beta signup") +
+      "?subject=" + encodeURIComponent("漢字Testr beta signup [" + code + "]") +
       "&body=" + encodeURIComponent(body);
   });
 </script>
