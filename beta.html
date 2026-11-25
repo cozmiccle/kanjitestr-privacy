@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漢字Testr — Join the Beta</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", sans-serif;
+         max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  h1 { font-size: 1.9rem; margin-bottom: .2rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; }
+  .meta { color: GrayText; margin-top: 0; }
+  a { color: #0a66c2; }
+  @media (prefers-color-scheme: dark) { a { color: #5aa9ff; } }
+  form { display: grid; gap: 1rem; margin-top: 1rem; }
+  label { display: grid; gap: .3rem; font-weight: 600; }
+  label small { font-weight: 400; color: GrayText; }
+  input, select, textarea { font: inherit; padding: .55rem .7rem; border: 1px solid #8888; border-radius: 8px; }
+  fieldset { border: 1px solid #8888; border-radius: 8px; padding: .6rem .9rem; }
+  legend { font-weight: 600; padding: 0 .3rem; }
+  fieldset label { display: inline-flex; gap: .4rem; font-weight: 400; margin-right: 1.2rem; }
+  button { font: inherit; font-weight: 600; padding: .7rem 1rem; border: 0; border-radius: 10px;
+           background: #0a66c2; color: white; cursor: pointer; justify-self: start; }
+  .fallback { margin-top: 1.25rem; color: GrayText; font-size: .95rem; }
+</style>
+</head>
+<body>
+<h1>Join the 漢字Testr beta</h1>
+<p class="meta">Free · invite-only · through Apple’s TestFlight</p>
+
+<p>漢字Testr is a kanji and vocabulary study app for iPhone, iPad and Mac, now in beta testing. Fill this in and your mail app will open with a request ready to send. You’ll get an invitation from TestFlight once you’re added.</p>
+
+<form id="signup">
+  <label>Your name
+    <input name="name" autocomplete="name" required>
+  </label>
+  <label>Email to send the TestFlight invitation to
+    <small>Any address you can open on your device. It doesn’t have to be your Apple Account.</small>
+    <input name="email" type="email" autocomplete="email" required>
+  </label>
+  <fieldset>
+    <legend>Devices you’ll test on</legend>
+    <label><input type="checkbox" name="device" value="iPhone"> iPhone</label>
+    <label><input type="checkbox" name="device" value="iPad"> iPad</label>
+    <label><input type="checkbox" name="device" value="Mac"> Mac</label>
+  </fieldset>
+  <label>Anything else? <small>Optional: your Japanese level, what you’d like to study.</small>
+    <textarea name="notes" rows="3"></textarea>
+  </label>
+  <button type="submit">Write my request</button>
+</form>
+
+<p class="fallback" id="fallback">If no mail app opens, send the same details to <span id="addr">the address shown here once the page loads</span>.</p>
+
+<h2>What happens next</h2>
+<ol>
+  <li>You’re added as a tester and get an email from TestFlight.</li>
+  <li>Install the free <a href="https://apps.apple.com/app/testflight/id899247664">TestFlight app</a> on your device (requires iOS, iPadOS or macOS 26 or later).</li>
+  <li>Open the invitation on that device and tap <em>View in TestFlight</em> to install 漢字Testr.</li>
+</ol>
+<p>Your details are used only to send the invitation. See the <a href="./">privacy policy</a> and <a href="support.html">support page</a>.</p>
+
+<script>
+  // Assembled here rather than written out, to keep the address away from simple scrapers.
+  const address = ["eqmccully", "kanjitestrsignup"].join("+") + "@" + "icloud.com";
+  document.getElementById("addr").innerHTML = '<a href="mailto:' + address + '">' + address + "</a>";
+
+  document.getElementById("signup").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const devices = [...f.querySelectorAll('input[name="device"]:checked')].map((d) => d.value);
+    const body = [
+      "Please add me to the 漢字Testr beta.",
+      "",
+      "Name: " + f.name.value.trim(),
+      "Invite email: " + f.email.value.trim(),
+      "Devices: " + (devices.join(", ") || "not specified"),
+      f.notes.value.trim() ? "\nNotes: " + f.notes.value.trim() : "",
+    ].join("\n");
+    location.href = "mailto:" + address +
+      "?subject=" + encodeURIComponent("漢字Testr beta signup") +
+      "&body=" + encodeURIComponent(body);
+  });
+</script>
+</body>
+</html>
