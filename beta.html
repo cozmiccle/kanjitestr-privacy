@@ -22,7 +22,15 @@
   fieldset label { display: inline-flex; gap: .4rem; font-weight: 400; margin-right: 1.2rem; }
   button { font: inherit; font-weight: 600; padding: .7rem 1rem; border: 0; border-radius: 10px;
            background: #0a66c2; color: white; cursor: pointer; justify-self: start; }
-  .fallback { margin-top: 1.25rem; color: GrayText; font-size: .95rem; }
+  .fallback { display: block; margin-top: .3rem; color: GrayText; font-size: .95rem; }
+  .next { margin-top: 2.5rem; padding: .25rem 1.25rem 1rem; border: 1px solid #8884; border-radius: 12px;
+          scroll-margin-top: 1rem; transition: background-color .4s, border-color .4s; }
+  .next h2 { margin-top: 1rem; }
+  .next li { margin-bottom: .9rem; }
+  .next.sent { border: 2px solid #0a66c2; background: #0a66c214; }
+  @media (prefers-color-scheme: dark) { .next.sent { border-color: #5aa9ff; background: #5aa9ff1a; } }
+  a.button { display: inline-block; margin-top: .5rem; padding: .55rem 1rem; border-radius: 10px;
+             background: #0a66c2; color: white; font-weight: 600; text-decoration: none; }
   .soon { color: GrayText; }
   .soon small { font-style: italic; }
   .error { color: #c62828; font-weight: 400; font-size: .95rem; }
@@ -59,14 +67,16 @@
   <button type="submit">Write my request</button>
 </form>
 
-<p class="fallback" id="fallback" hidden>If no mail app opened, send the same details, including your signup code, to <span id="addr"></span>.</p>
-
-<h2>What happens next</h2>
-<ol>
-  <li>You’re added as a tester and get an email from TestFlight.</li>
-  <li>Install the free <a href="https://apps.apple.com/app/testflight/id899247664">TestFlight app</a> on your device (requires iOS, iPadOS or macOS 26 or later).</li>
-  <li>Open the invitation on that device and tap <em>View in TestFlight</em> to install 漢字Testr.</li>
-</ol>
+<section class="next" id="next">
+  <h2 id="next-title">What happens next</h2>
+  <ol>
+    <li><strong>Send the request</strong> from your mail app.
+      <span class="fallback" id="fallback" hidden>If no mail app opened, send the same details, including your signup code, to <span id="addr"></span>.</span></li>
+    <li><strong>Install TestFlight</strong>, Apple’s free beta-testing app, on your iPhone (iOS 26 or later). You’ll need it to install 漢字Testr.
+      <a class="button" href="https://apps.apple.com/app/testflight/id899247664">Get TestFlight on the App Store</a></li>
+    <li><strong>Watch for an email from TestFlight</strong> once you’re added. Open it on your iPhone, tap <em>View in TestFlight</em>, then <em>Install</em>.</li>
+  </ol>
+</section>
 <p>Your details are used only to send the invitation. See the <a href="./">privacy policy</a> and <a href="support.html">support page</a>.</p>
 
 <script>
@@ -115,6 +125,10 @@
 
     document.getElementById("addr").innerHTML = '<a href="mailto:' + address + '">' + address + "</a>";
     document.getElementById("fallback").hidden = false;
+    document.getElementById("next-title").textContent = "Almost there: send it, then get TestFlight";
+    const next = document.getElementById("next");
+    next.classList.add("sent");
+    next.scrollIntoView({ behavior: "smooth", block: "start" });
     location.href = "mailto:" + address +
       "?subject=" + encodeURIComponent("漢字Testr beta signup [" + code + "]") +
       "&body=" + encodeURIComponent(body);
